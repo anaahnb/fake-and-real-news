@@ -13,7 +13,7 @@ class DataProcessor:
         self.true_path = true_path
         self.fake_path = fake_path
 
-    def process_data(self):
+    def merge_data(self):
         """
         Processa os dados combinando as colunas 'title' e 'text', atribuindo rótulos
         e embaralhando os dados para futura análise ou modelagem.
@@ -46,17 +46,17 @@ class DataProcessor:
         text = tf.strings.strip(text)
         return text.numpy().decode('utf-8')
 
-    def process_and_save(self, output_path: str):
+    def normalize_and_save(self, output_path: str):
         """
         Processa e limpa os dados, gerando um novo dataset processado.
 
         :param output_path: Caminho para salvar o novo dataset
         """
-        df = self.process_data()
+        df = self.merge_data()
         df['text'] = df['text'].apply(lambda x: self.clean_text(x))
         df.to_csv(output_path, index=False)
-        print(f"Dataset processado salvo em: {output_path}")
+        print(f"Dataset salvo em: {output_path}")
 
 if __name__ == "__main__":
-    data_processor = DataProcessor("Dataset/True.csv", "Dataset/Fake.csv")
-    data_processor.process_and_save("Dataset/Processed.csv")
+    data_normalize = DataProcessor("Dataset/True.csv", "Dataset/Fake.csv")
+    data_normalize.normalize_and_save("Dataset/Processed.csv")
