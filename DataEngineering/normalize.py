@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import re
+from Settings.keys import ParamsKeys
 
 class DataNormalize:
     def __init__(self, true_path: str, fake_path: str):
@@ -24,15 +25,15 @@ class DataNormalize:
         df_true = pd.read_csv(self.true_path)
         df_fake = pd.read_csv(self.fake_path)
 
-        df_true['text'] = df_true['title'] + ' ' + df_true['text']
-        df_fake['text'] = df_fake['title'] + ' ' + df_fake['text']
-        df_true['status'] = 1
-        df_fake['status'] = 0
+        df_true[ParamsKeys.TEXT] = df_true[ParamsKeys.TITLE] + ' ' + df_true[ParamsKeys.TEXT]
+        df_fake[ParamsKeys.TEXT] = df_fake[ParamsKeys.TITLE] + ' ' + df_fake[ParamsKeys.TEXT]
+        df_true[ParamsKeys.STATUS] = 1
+        df_fake[ParamsKeys.STATUS] = 0
 
-        df = pd.concat([df_true[['text', 'status', 'subject']], df_fake[['text', 'status', 'subject']]], ignore_index=True)
+        df = pd.concat([df_true[[ParamsKeys.TEXT, ParamsKeys.STATUS, ParamsKeys.SUBJECT]], df_fake[[ParamsKeys.TEXT, ParamsKeys.STATUS, ParamsKeys.SUBJECT]]], ignore_index=True)
         df = df.sample(frac=1).reset_index(drop=True)
 
-        df['text'] = df['text'].apply(self.clean_text)
+        df[ParamsKeys.TEXT] = df[ParamsKeys.TEXT].apply(self.clean_text)
 
         self.dataset = df
         return df
@@ -50,7 +51,7 @@ class DataNormalize:
         text = text.strip()
         return text
 
-    def save_processed_data(self, output_path="Dataset/processed/Nomalized.csv"):
+    def save_processed_data(self, output_path=ParamsKeys.NORMALIZED_DATASET_PATH):
         """
         Salva o DataFrame processado em um arquivo CSV, garantindo que o diretório exista.
 
@@ -61,10 +62,8 @@ class DataNormalize:
         if self.dataset is not None:
             self.dataset.to_csv(output_path, index=False)
             print(f"Arquivo salvo como: {output_path}")
-        else:
-            print("Erro: O dataset ainda não foi processado. Execute merge_data() primeiro.")
 
 if __name__ == "__main__":
-    normalizer = DataNormalize("Dataset/True.csv", "Dataset/Fake.csv")
+    normalizer = DataNormalize(ParamsKeys.TRUE_DATASET_PATH, ParamsKeys.FAKE_DATASET_PATH)
     df_processed = normalizer.merge_data()
     normalizer.save_processed_data()

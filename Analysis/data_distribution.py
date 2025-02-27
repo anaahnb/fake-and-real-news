@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from Settings.keys import ParamsKeys
 
 class DataDistribution:
     def __init__(self, true_path: str, fake_path: str, processed_path: str):
@@ -29,7 +30,7 @@ class DataDistribution:
                     (self.df_true, "Distribuição das Categorias - Notícias Verdadeiras")]
 
         for i, (df, title) in enumerate(datasets):
-            ax = df['subject'].value_counts().plot(kind='bar', color=colors, edgecolor='black', ax=axes[i])
+            ax = df[ParamsKeys.SUBJECT].value_counts().plot(kind='bar', color=colors, edgecolor=ParamsKeys.EDGE_COLOR, ax=axes[i])
             ax.set_title(title, fontsize=16)
             ax.set_xlabel("Categoria", fontsize=12)
             ax.set_ylabel("Contagem", fontsize=12)
@@ -45,13 +46,13 @@ class DataDistribution:
         para verificar o balanceamento da base de dados.
         """
         plt.figure(figsize=(7, 7))
-        colors = sns.color_palette('pastel')
-        labels = ["Fake", "Real"]
-        sizes = self.df_processed['status'].value_counts().values
+        colors = sns.color_palette(ParamsKeys.GRAPHS_THEME)
+        labels = [ParamsKeys.FAKE, ParamsKeys.REAL]
+        sizes = self.df_processed[ParamsKeys.STATUS].value_counts().values
 
         wedges, texts, autotexts = plt.pie(sizes, colors=colors,
             autopct='%1.1f%%', startangle=140,
-            explode=(0.1, 0), wedgeprops={'edgecolor': 'black'})
+            explode=(0.1, 0), wedgeprops={'edgecolor': ParamsKeys.EDGE_COLOR})
 
         plt.title("Distribuição do Status das Notícias", fontsize=16)
         plt.legend(wedges, labels, loc="best", fontsize=12)

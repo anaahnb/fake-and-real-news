@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
+from Settings.keys import ParamsKeys
 
 class WordCloudGenerator:
     def __init__(self, dataset_path: str):
@@ -31,12 +32,12 @@ class WordCloudGenerator:
         """
         Gera e exibe nuvens de palavras separadas para notícias falsas e verdadeiras.
         """
-        real_news = self.dataset[self.dataset['status'] == 1]['text'].tolist()
-        fake_news = self.dataset[self.dataset['status'] == 0]['text'].tolist()
+        real_news = self.dataset[self.dataset[ParamsKeys.STATUS] == 1][ParamsKeys.TEXT].tolist()
+        fake_news = self.dataset[self.dataset[ParamsKeys.STATUS] == 0][ParamsKeys.TEXT].tolist()
 
         self.generate_wordcloud(real_news, "Nuvem de Palavras - Notícias Verdadeiras")
         self.generate_wordcloud(fake_news, "Nuvem de Palavras - Notícias Falsas")
 
 if __name__ == "__main__":
-    wordcloud_gen = WordCloudGenerator("Dataset/Processed.csv")
+    wordcloud_gen = WordCloudGenerator(ParamsKeys.NORMALIZED_DATASET_PATH)
     wordcloud_gen.generate_fake_and_real_wordclouds()
