@@ -1,62 +1,62 @@
+import os
 import pandas as pd
 import numpy as np
-import tensorflow as tf
+from sklearn.model_selection import train_test_split
+from collections import Counter
+from normalize import DataNormalize
 
-class DataProcessor:
+class DataPreprocessing:
     def __init__(self, true_path: str, fake_path: str):
         """
-        Classe para processar e limpar dados de notícias verdadeiras e falsas.
+        Classe responsável por pré-processar os dados e dividi-los em conjuntos de treino, validação e teste.
 
         :param true_path: Caminho do arquivo CSV contendo notícias verdadeiras
         :param fake_path: Caminho do arquivo CSV contendo notícias falsas
         """
-        self.true_path = true_path
-        self.fake_path = fake_path
+        self.processor = DataNormalize(true_path, fake_path)
 
-    def merge_data(self):
+    def process_and_split(self, output_dir: str):
         """
-        Processa os dados combinando as colunas 'title' e 'text', atribuindo rótulos
-        e embaralhando os dados para futura análise ou modelagem.
+        Normaliza os dados, divide em treino, validação e teste, e salva os arquivos.
 
-        :return: DataFrame processado com colunas 'text', 'status' e 'subject'
+        :param output_dir: Diretório onde os arquivos processados serão salvos.
         """
-        df_true = pd.read_csv(self.true_path)
-        df_fake = pd.read_csv(self.fake_path)
+        df = self.processor.merge_data()
+        df['text'] = df['text'].apply(self.processor.clean_text)
 
-        df_true['text'] = df_true['title'] + ' ' + df_true['text']
-        df_fake['text'] = df_fake['title'] + ' ' + df_fake['text']
-        df_true['status'] = 1
-        df_fake['status'] = 0
+        y = df['status'].values
+        X = df[['text']].values
+        del df
 
-        df = pd.concat([df_true[['text', 'status', 'subject']], df_fake[['text', 'status', 'subject']]], ignore_index=True)
-        df = df.sample(frac=1).reset_index(drop=True)
+        # Primeira divisão: 80% para treino + validação, 20% para teste
+        X_raw, X_test, y_raw, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-        return df
+        # Segunda divisão: separando treino e validação
+        X_train, X_val, y_train, y_val = train_test_split(X_raw, y_raw, test_size=0.2, random_state=42, stratify=y_raw)
+        del X_raw, y_raw
 
-    def clean_text(self, text):
-        """
-        Realiza a padronização do texto, removendo caracteres especiais, números e espaços extras.
+        print("Distribuição das classes:")
+        print("Treino:", Counter(y_train))
+        print("Teste:", Counter(y_test))
+        print("Validação:", Counter(y_val))
 
-        :param text: Texto a ser limpo
-        :return: Texto processado
-        """
-        text = text.lower()
-        text = tf.strings.regex_replace(text, '[^\w\s]', '')
-        text = tf.strings.regex_replace(text, '\d+', '')
-        text = tf.strings.strip(text)
-        return text.numpy().decode('utf-8')
+        train = pd.DataFrame(X_train, columns=['text'])
+        train['status'] = y_train
 
-    def normalize_and_save(self, output_path: str):
-        """
-        Processa e limpa os dados, gerando um novo dataset processado.
+        test = pd.DataFrame(X_test, columns=['text'])
+        test['status'] = y_test
 
-        :param output_path: Caminho para salvar o novo dataset
-        """
-        df = self.merge_data()
-        df['text'] = df['text'].apply(lambda x: self.clean_text(x))
-        df.to_csv(output_path, index=False)
-        print(f"Dataset salvo em: {output_path}")
+        val = pd.DataFrame(X_val, columns=['text'])
+        val['status'] = y_val
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        train.to_csv(f"{output_dir}/train.csv", index=False)
+        val.to_csv(f"{output_dir}/validation.csv", index=False)
+        test.to_csv(f"{output_dir}/test.csv", index=False)
+
+        print(f"Arquivos salvos em {output_dir}")
 
 if __name__ == "__main__":
-    data_normalize = DataProcessor("Dataset/True.csv", "Dataset/Fake.csv")
-    data_normalize.normalize_and_save("Dataset/Processed.csv")
+    preprocessing = DataPreprocessing("Dataset/True.csv", "Dataset/Fake.csv")
+    preprocessing.process_and_split("Dataset/processed")
