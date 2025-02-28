@@ -1,8 +1,9 @@
 import os
 import kaggle
+from Settings.keys import ParamsKeys
 
 class DataLoading:
-    def __init__(self, dataset_name: str, download_path: str = "./Dataset"):
+    def __init__(self, dataset_name: str, download_path: str = ParamsKeys.DATASET_FOLDER_PATH):
         """
         Classe para baixar datasets do Kaggle.
 
@@ -32,5 +33,5 @@ class DataLoading:
             print(f"Erro ao baixar o dataset: {e}")
 
 if __name__ == "__main__":
-    downloader = DataLoading("clmentbisaillon/fake-and-real-news-dataset")
+    downloader = DataLoading(ParamsKeys.DATASET_URL_DOWNLOAD)
     downloader.download()

@@ -7,6 +7,8 @@ class ParamsKeys:
     TITLE = "title"
     GRAPHS_THEME = "pastel"
     EDGE_COLOR = "black"
+    DATASET_URL_DOWNLOAD = "clmentbisaillon/fake-and-real-news-dataset"
+    DATASET_FOLDER_PATH = "./Dataset"
     NORMALIZED_DATASET_PATH = "Dataset/processed/Normalized.csv"
     TRUE_DATASET_PATH = "Dataset/True.csv"
     FAKE_DATASET_PATH = "Dataset/Fake.csv"
