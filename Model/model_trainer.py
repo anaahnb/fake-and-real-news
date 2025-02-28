@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import layers, losses
 from DataEngineering.preprocessing import DataPreprocessing
+from Settings.keys import ParamsKeys
 
 class ModelTrainer:
     def __init__(self, vocab_size, max_length, embedding_dim=16, num_classes=2):
@@ -77,9 +78,9 @@ class ModelTrainer:
         return acc
 
 if __name__ == "__main__":
-    preprocessing = DataPreprocessing("path_true.csv", "path_fake.csv")
+    preprocessing = DataPreprocessing(ParamsKeys.TRUE_DATASET_PATH, ParamsKeys.FAKE_DATASET_PATH)
     train_dataset, val_dataset, test_dataset, vocab_size, max_length = preprocessing.process_and_split()
 
-    phishing_model = PhishingDetectionModel(vocab_size, max_length)
-    phishing_model.train(train_dataset, val_dataset)
-    phishing_model.evaluate(test_dataset)
+    model = ModelTrainer(vocab_size, max_length)
+    model.train(train_dataset, val_dataset)
+    model.evaluate(test_dataset)
