@@ -39,6 +39,8 @@ class ModelTrainer:
             metrics=['accuracy']
         )
 
+        model.build(input_shape=(None, max_length))
+
         return model
 
     def train(self, train_dataset, val_dataset, epochs=10, patience=3):

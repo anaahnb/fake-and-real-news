@@ -60,9 +60,11 @@ class DataPreprocessing:
         print("Distribuição das classes:")
         print("Treino:", Counter(y_train))
         print("Teste:", Counter(y_test))
-        print("Validação:clear", Counter(y_val))
+        print("Validação:", Counter(y_val))
 
         train_seq, val_seq, test_seq, vocab_size, max_length = self.tokenize_and_pad(X_train, X_val, X_test)
+
+        return train_dataset, val_dataset, test_dataset, vocab_size, max_length, y_train, y_test, y_val
 
         def create_tf_dataset(X, y):
             """
@@ -79,7 +81,7 @@ class DataPreprocessing:
         val_dataset = create_tf_dataset(val_seq, y_val)
         test_dataset = create_tf_dataset(test_seq, y_test)
 
-        return train_dataset, val_dataset, test_dataset, vocab_size, max_length
+        return train_dataset, val_dataset, test_dataset, vocab_size, max_length, y_train, y_test, y_val
 
 if __name__ == "__main__":
     preprocessing = DataPreprocessing(ParamsKeys.TRUE_DATASET_PATH, ParamsKeys.FAKE_DATASET_PATH)
