@@ -1,27 +1,50 @@
-import os
-import pandas as pd
-import numpy as np
+import tensorflow as tf
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 from collections import Counter
 from normalize import DataNormalize
 from Settings.keys import ParamsKeys
 
-
 class DataPreprocessing:
     def __init__(self, true_path: str, fake_path: str):
         """
-        Classe responsável por pré-processar os dados e dividi-los em conjuntos de treino, validação e teste.
+        Classe responsável pelo pré-processamento dos dados e criação dos datasets para treinamento.
 
-        :param true_path: Caminho do arquivo CSV contendo notícias verdadeiras
-        :param fake_path: Caminho do arquivo CSV contendo notícias falsas
+        :param true_path: Caminho do CSV contendo notícias verdadeiras
+        :param fake_path: Caminho do CSV contendo notícias falsas
         """
         self.processor = DataNormalize(true_path, fake_path)
+        self.AUTOTUNE = tf.data.AUTOTUNE
+        self.tokenizer = Tokenizer()
 
-    def process_and_split(self, output_dir: str):
+    def tokenize_and_pad(self, X_train, X_val, X_test):
         """
-        Normaliza os dados, divide em treino, validação e teste, e salva os arquivos.
+        Tokeniza os textos e aplica padding para garantir que todas as sequências tenham o mesmo comprimento.
 
-        :param output_dir: Diretório onde os arquivos processados serão salvos.
+        :param X_train: Lista de textos do conjunto de treino.
+        :param X_val: Lista de textos do conjunto de validação.
+        :param X_test: Lista de textos do conjunto de teste.
+        :return: Sequências tokenizadas e preenchidas (train, val, test), vocab_size e max_length.
+        """
+        self.tokenizer.fit_on_texts(X_train)
+
+        train_seq = self.tokenizer.texts_to_sequences(X_train)
+        val_seq = self.tokenizer.texts_to_sequences(X_val)
+        test_seq = self.tokenizer.texts_to_sequences(X_test)
+
+        vocab_size = len(self.tokenizer.word_index) + 1
+        max_length = max(len(sequence) for sequence in train_seq)
+
+        train_seq = pad_sequences(train_seq, maxlen=max_length, padding='post', truncating='post')
+        val_seq = pad_sequences(val_seq, maxlen=max_length, padding='post', truncating='post')
+        test_seq = pad_sequences(test_seq, maxlen=max_length, padding='post', truncating='post')
+
+        return train_seq, val_seq, test_seq, vocab_size, max_length
+
+    def process_and_split(self):
+        """
+        Normaliza os dados, divide em treino, validação e teste e retorna datasets TensorFlow.
         """
         df = self.processor.merge_data()
         df[ParamsKeys.TEXT] = df[ParamsKeys.TEXT].apply(self.processor.clean_text)
@@ -30,35 +53,34 @@ class DataPreprocessing:
         X = df[ParamsKeys.TEXT].values
         del df
 
-        # Primeira divisão: 80% para treino + validação, 20% para teste
         X_raw, X_test, y_raw, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-
-        # Segunda divisão: separando treino e validação
         X_train, X_val, y_train, y_val = train_test_split(X_raw, y_raw, test_size=0.2, random_state=42, stratify=y_raw)
         del X_raw, y_raw
 
         print("Distribuição das classes:")
         print("Treino:", Counter(y_train))
         print("Teste:", Counter(y_test))
-        print("Validação:", Counter(y_val))
+        print("Validação:clear", Counter(y_val))
 
-        train = pd.DataFrame(X_train, columns=[ParamsKeys.TEXT])
-        train[ParamsKeys.STATUS] = y_train
+        train_seq, val_seq, test_seq, vocab_size, max_length = self.tokenize_and_pad(X_train, X_val, X_test)
 
-        test = pd.DataFrame(X_test, columns=[ParamsKeys.TEXT])
-        test[ParamsKeys.STATUS] = y_test
+        def create_tf_dataset(X, y):
+            """
+            Converte arrays NumPy em um `tf.data.Dataset` otimizado para treinamento.
 
-        val = pd.DataFrame(X_val, columns=[ParamsKeys.TEXT])
-        val[ParamsKeys.STATUS] = y_val
+            :param X: Sequências tokenizadas.
+            :param y: Rótulos correspondentes.
+            :return: `tf.data.Dataset` pronto para uso.
+            """
+            dataset = tf.data.Dataset.from_tensor_slices((X, y))
+            return dataset.cache().shuffle(len(X)).batch(32).prefetch(buffer_size=self.AUTOTUNE)
 
-        os.makedirs(output_dir, exist_ok=True)
+        train_dataset = create_tf_dataset(train_seq, y_train)
+        val_dataset = create_tf_dataset(val_seq, y_val)
+        test_dataset = create_tf_dataset(test_seq, y_test)
 
-        train.to_csv(f"{output_dir}/{ParamsKeys.TRAIN_DATASET_PATH}", index=False)
-        val.to_csv(f"{output_dir}/{ParamsKeys.VAL_DATASET_PATH}", index=False)
-        test.to_csv(f"{output_dir}/{ParamsKeys.TEST_DATASET_PATH}", index=False)
-
-        print(f"Arquivos salvos em {output_dir}")
+        return train_dataset, val_dataset, test_dataset, vocab_size, max_length
 
 if __name__ == "__main__":
     preprocessing = DataPreprocessing(ParamsKeys.TRUE_DATASET_PATH, ParamsKeys.FAKE_DATASET_PATH)
-    preprocessing.process_and_split("Dataset/processed")
+    train_dataset, val_dataset, test_dataset, vocab_size, max_length = preprocessing.process_and_split()
