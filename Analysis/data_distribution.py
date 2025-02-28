@@ -60,6 +60,6 @@ class DataDistribution:
         plt.show()
 
 if __name__ == "__main__":
-    analysis = DataDistribution("Dataset/True.csv", "Dataset/Fake.csv", "Dataset/processed/Nomalized.csv")
+    analysis = DataDistribution(ParamsKeys.TRUE_DATASET_PATH, ParamsKeys.FAKE_DATASET_PATH, ParamsKeys.FAKE_DATASET_PATH)
     analysis.plot_category_distribution()
     analysis.plot_status_distribution()
