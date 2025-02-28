@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from tabulate import tabulate
+from Settings.keys import ParamsKeys
 
 class DataSizeAnalysis:
     def __init__(self, true_path: str, fake_path: str, processed_path: str):
@@ -17,6 +19,31 @@ class DataSizeAnalysis:
 
         self.df_processed = pd.read_csv(processed_path)
 
+    def calculate_avg_characters(self):
+        """
+        Calcula e exibe a média do número de caracteres por notícia para cada categoria
+        em formato de tabela estilizada usando tabulate.
+        """
+        datasets = {
+            "Notícias Verdadeiras - Brutas": self.df_true_raw[ParamsKeys.TEXT],
+            "Notícias Falsas - Brutas": self.df_fake_raw[ParamsKeys.TEXT],
+            "Notícias Verdadeiras - Processadas": self.df_processed[self.df_processed[ParamsKeys.STATUS] == 1][ParamsKeys.TEXT],
+            "Notícias Falsas - Processadas": self.df_processed[self.df_processed[ParamsKeys.STATUS] == 0][ParamsKeys.TEXT]
+        }
+
+        data_summary = []
+
+        for name, text_data in datasets.items():
+            text_data = text_data.dropna()
+            avg_chars = text_data.apply(len).mean()
+            data_summary.append([name, f"{avg_chars:.2f} caracteres"])
+
+        # Criar tabela estilizada
+        table = tabulate(data_summary, headers=["Categoria", "Média de Caracteres"], tablefmt="fancy_grid")
+
+        print(table)
+
+
     def plot_length_distribution(self):
         """
         Plota histogramas comparando o tamanho das notícias antes e depois do processamento,
@@ -25,10 +52,10 @@ class DataSizeAnalysis:
         fig, axes = plt.subplots(2, 2, figsize=(16, 10), sharex=True, sharey=True)
 
         datasets = [
-            (self.df_true_raw['text'], "Notícias Verdadeiras - Brutas", "blue", axes[0, 0]),
-            (self.df_fake_raw['text'], "Notícias Falsas - Brutas", "red", axes[0, 1]),
-            (self.df_processed[self.df_processed['status'] == 1]['text'], "Notícias Verdadeiras - Processadas", "purple", axes[1, 0]),
-            (self.df_processed[self.df_processed['status'] == 0]['text'], "Notícias Falsas - Processadas", "orange", axes[1, 1])
+            (self.df_true_raw[ParamsKeys.TEXT], "Notícias Verdadeiras - Brutas", "blue", axes[0, 0]),
+            (self.df_fake_raw[ParamsKeys.TEXT], "Notícias Falsas - Brutas", "red", axes[0, 1]),
+            (self.df_processed[self.df_processed[ParamsKeys.STATUS] == 1][ParamsKeys.TEXT], "Notícias Verdadeiras - Processadas", "purple", axes[1, 0]),
+            (self.df_processed[self.df_processed[ParamsKeys.STATUS] == 0][ParamsKeys.TEXT], "Notícias Falsas - Processadas", "orange", axes[1, 1])
         ]
 
         for text_data, title, color, ax in datasets:
@@ -46,5 +73,6 @@ class DataSizeAnalysis:
         plt.show()
 
 if __name__ == "__main__":
-    analysis = DataSizeAnalysis("Dataset/True.csv", "Dataset/Fake.csv", "Dataset/processed/Normalized.csv")
+    analysis = DataSizeAnalysis(ParamsKeys.TRUE_DATASET_PATH, ParamsKeys.FAKE_DATASET_PATH, ParamsKeys.NORMALIZED_DATASET_PATH)
+    analysis.calculate_avg_characters()
     analysis.plot_length_distribution()

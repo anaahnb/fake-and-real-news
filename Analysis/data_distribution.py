@@ -60,6 +60,6 @@ class DataDistribution:
         plt.show()
 
 if __name__ == "__main__":
-    analysis = DataDistribution(ParamsKeys.TRUE_DATASET_PATH, ParamsKeys.FAKE_DATASET_PATH, ParamsKeys.FAKE_DATASET_PATH)
+    analysis = DataDistribution(ParamsKeys.TRUE_DATASET_PATH, ParamsKeys.FAKE_DATASET_PATH, ParamsKeys.NORMALIZED_DATASET_PATH)
     analysis.plot_category_distribution()
     analysis.plot_status_distribution()
