@@ -30,7 +30,7 @@ class ModelTrainer:
             layers.Dropout(0.2),
             layers.GlobalAveragePooling1D(),
             layers.Dropout(0.2),
-            layers.Dense(self.num_classes, activation='softmax')
+            layers.Dense(self.num_classes, activation='sigmoid')
         ])
 
         model.compile(
