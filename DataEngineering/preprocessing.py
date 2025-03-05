@@ -64,8 +64,6 @@ class DataPreprocessing:
 
         train_seq, val_seq, test_seq, vocab_size, max_length = self.tokenize_and_pad(X_train, X_val, X_test)
 
-        return train_dataset, val_dataset, test_dataset, vocab_size, max_length, y_train, y_test, y_val
-
         def create_tf_dataset(X, y):
             """
             Converte arrays NumPy em um `tf.data.Dataset` otimizado para treinamento.

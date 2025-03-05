@@ -30,7 +30,7 @@ class ModelTrainer:
             layers.Dropout(0.2),
             layers.GlobalAveragePooling1D(),
             layers.Dropout(0.2),
-            layers.Dense(self.num_classes, activation='sigmoid')
+            layers.Dense(self.num_classes, activation='softmax')
         ])
 
         model.compile(
@@ -39,7 +39,7 @@ class ModelTrainer:
             metrics=['accuracy']
         )
 
-        model.build(input_shape=(None, max_length))
+        model.build(input_shape=(None, self.max_length))
 
         return model
 
