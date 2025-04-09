@@ -86,3 +86,4 @@ if __name__ == "__main__":
     model = ModelTrainer(vocab_size, max_length)
     model.train(train_dataset, val_dataset)
     model.evaluate(test_dataset)
+
